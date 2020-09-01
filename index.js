@@ -5,6 +5,7 @@ const stringify = require("json-stringify-safe");
 
 AWS.config.region = "ap-east-1";
 const s3 = new AWS.S3();
+const sns = new AWS.SNS();
 const docClient = new AWS.DynamoDB.DocumentClient();
 
 const columns = ["latitude", "longitude", "address"];
@@ -14,6 +15,8 @@ const LONGITUDE = "longitude";
 
 const batchWriteSize = 20;
 const tableName = "t_address";
+
+const snsTopicArn = "arn:aws:sns:ap-east-1:666125933515:csvDataReceiveError";
 
 /**
  * check csv data
@@ -62,6 +65,21 @@ exports.getBatchWriteData = (records, offset, size) => {
   return requestParams;
 };
 
+exports.publishSnsMessage = async (msg) => {
+  const params = {
+    Message: msg,
+    TopicArn: snsTopicArn,
+  };
+
+  try {
+    const result = await sns.publish(params).promise();
+    console.log(`Message ${msg} send sent to the topic ${params.TopicArn}`);
+    console.log("MessageID is " + result.MessageId);
+  } catch (err) {
+    console.error(`publish sns message fail, ${JSON.stringify(err)}`);
+  }
+};
+
 exports.handler = async (event) => {
   const srcBucket = event.Records[0].s3.bucket.name;
   const srcKey = decodeURIComponent(
@@ -106,15 +124,18 @@ exports.handler = async (event) => {
         result.UnprocessedItems[tableName] &&
         result.UnprocessedItems[tableName].length > 0
       ) {
-        console.error(
-          `${tableName} unprocess data ${JSON.stringify(
-            result.UnprocessedItems
-          )}`
-        );
+        const errMsg = `s3 file ${srcBucket}/${srcKey} ${tableName} unprocess data ${JSON.stringify(
+          result.UnprocessedItems
+        )}`;
+        console.error(errMsg);
+        await this.publishSnsMessage(errMsg);
       }
     }
   } catch (err) {
     console.error(err);
+    await this.publishSnsMessage(
+      `s3 file ${srcBucket}/${srcKey} ${JSON.stringify(err)}`
+    );
   }
 
   const response = {
