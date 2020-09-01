@@ -7,6 +7,7 @@ const s3Data = {
   ContentType: "text/csv",
   Metadata: {},
   Body: Buffer.from([
+    108,
     97,
     116,
     105,
@@ -652,15 +653,14 @@ const s3Data = {
 describe("csv data test", () => {
   test("normal data", () => {
     const data = `latitude,longitude,address
-    -43.58299805,146.89373497,"840 COCKLE CREEK RD, RECHERCHE TAS 7109"
-    -43.58259635,146.89402117,"833 COCKLE CREEK RD, RECHERCHE TAS 7109"
-    `;
+      -43.58299805,146.89373497,"840 COCKLE CREEK RD, RECHERCHE TAS 7109"
+      -43.58259635,146.89402117,"833 COCKLE CREEK RD, RECHERCHE TAS 7109"`;
     // const data = s3Data.Body.data;
     const records = checkCsvData(data);
     expect(records.length).toBe(2);
   });
 
-  test("normal data from s3 data", () => {
+  test("data from s3 data", () => {
     const data = s3Data.Body;
     const records = checkCsvData(data);
     expect(records.length).toBe(9);
@@ -668,27 +668,31 @@ describe("csv data test", () => {
 
   test("error data, miss data", () => {
     const data = `latitude,longitude,address
--43.58299805,"840 COCKLE CREEK RD, RECHERCHE TAS 7109"
--43.58259635,146.89402117,"833 COCKLE CREEK RD, RECHERCHE TAS 7109"
-`;
-    const records = checkCsvData(data);
-    expect(records.length).toBe(2);
+      -43.58299805,"840 COCKLE CREEK RD, RECHERCHE TAS 7109"
+      -43.58259635,146.89402117,"833 COCKLE CREEK RD, RECHERCHE TAS 7109"`;
+    try {
+      const records = checkCsvData(data);
+    } catch (err) {
+      expect(err.message).toContain("Invalid");
+    }
   });
 
   test("error data, column miss match", () => {
     const data = `latitude1,longitude1,address
--43.58299805,146.89373497,"840 COCKLE CREEK RD, RECHERCHE TAS 7109"
--43.58259635,146.89402117,"833 COCKLE CREEK RD, RECHERCHE TAS 7109"
+      -43.58299805,146.89373497,"840 COCKLE CREEK RD, RECHERCHE TAS 7109"
+      -43.58259635,146.89402117,"833 COCKLE CREEK RD, RECHERCHE TAS 7109"
 `;
-    const records = checkCsvData(data);
-    expect(records.length).toBe(2);
+    try {
+      const records = checkCsvData(data);
+    } catch (err) {
+      expect(err).toContain("error");
+    }
   });
 
   test("error data, data format error", () => {
     const data = `latitude,longitude,address
--43.58299805,[146.89373497],"840 COCKLE CREEK RD, RECHERCHE TAS 7109"
--43.58259635,146.89402117,"833 COCKLE CREEK RD, RECHERCHE TAS 7109"
-`;
+      -43.58299805,[146.89373497],"840 COCKLE CREEK RD, RECHERCHE TAS 7109"
+      -43.58259635,146.89402117,"833 COCKLE CREEK RD, RECHERCHE TAS 7109"`;
     const records = checkCsvData(data);
     expect(records.length).toBe(2);
   });

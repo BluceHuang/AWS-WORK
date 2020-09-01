@@ -13,6 +13,8 @@
     "jest": "^26.4.2"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "deploy": "./script/deploy.sh",
+    "invoke": "./script/invoke.sh"
   }
 }

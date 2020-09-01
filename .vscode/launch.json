@@ -1,0 +1,18 @@
+{
+  "configurations": [
+    {
+      "type": "aws-sam",
+      "request": "direct-invoke",
+      "name": "aws-work:function",
+      "invokeTarget": {
+        "target": "template",
+        "templatePath": "template.yml",
+        "logicalId": "function"
+      },
+      "lambda": {
+        "payload": {},
+        "environmentVariables": {}
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: An AWS Lambda application that calls the Lambda API.
+Resources:
+  function:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs12.x
+      CodeUri: s3://lambda-artifacts-e1eff805b60eefd4/3e1eb24d524047a443d7f04db56000b4
+      Description: Call the AWS Lambda API
+      Timeout: 10
+      Policies:
+      - AWSLambdaBasicExecutionRole
+      - AWSLambdaReadOnlyAccess
+      - AWSXrayWriteOnlyAccess
+      - AmazonDynamoDBFullAccess
+      - AmazonSNSFullAccess
+      Tracing: Active
+      Layers:
+      - Ref: libs
+  libs:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: blank-nodejs-lib
+      Description: Dependencies for the blank sample app.
+      ContentUri: s3://lambda-artifacts-e1eff805b60eefd4/707ac3c80bd11d7681785327e430a67b
+      CompatibleRuntimes:
+      - nodejs12.x

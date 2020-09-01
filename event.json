@@ -1,0 +1,38 @@
+{
+  "Records": [
+    {
+      "eventVersion": "2.1",
+      "eventSource": "aws:s3",
+      "awsRegion": "ap-east-1",
+      "eventTime": "2020-08-31T12:54:11.461Z",
+      "eventName": "ObjectCreated:Put",
+      "userIdentity": {
+        "principalId": "A34B6OGUVZ8TZK"
+      },
+      "requestParameters": {
+        "sourceIPAddress": "23.105.216.101"
+      },
+      "responseElements": {
+        "x-amz-request-id": "42368127003F98D8",
+        "x-amz-id-2": "TVy5JvwRJCTbdJzI6IKCqdXcUZSakuw1DymA74Xtbynwc0JQMRxgLLFB8JRg72reuPKpwi6erjkgFdQSGoqK9cE+wgvXaMVV"
+      },
+      "s3": {
+        "s3SchemaVersion": "1.0",
+        "configurationId": "31ba2406-2089-42b5-82f8-ffb77539865d",
+        "bucket": {
+          "name": "huangyong-csvdata",
+          "ownerIdentity": {
+            "principalId": "A34B6OGUVZ8TZK"
+          },
+          "arn": "arn:aws:s3:::huangyong-csvdata"
+        },
+        "object": {
+          "key": "csv/error.csv",
+          "size": 639,
+          "eTag": "576b56295ee88a44161ddaf8e464cfdb",
+          "sequencer": "005F4CF2F46A4EDB76"
+        }
+      }
+    }
+  ]
+}

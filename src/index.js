@@ -14,10 +14,11 @@ const LATITUDE = "latitude";
 const LONGITUDE = "longitude";
 
 const batchWriteSize = 20;
-const tableName = "t_address";
 
+const tableName = "t_address";
 const snsTopicArn = "arn:aws:sns:ap-east-1:666125933515:csvDataReceiveError";
 
+const ErrorCode = 10000;
 /**
  * check csv data
  */
@@ -48,6 +49,22 @@ exports.checkCsvData = (data) => {
   }
   return records;
 };
+
+function responseSuccess() {
+  const response = {
+    statusCode: 200,
+    body: JSON.stringify({}),
+  };
+  return response;
+}
+
+function responseError(errCode, msg) {
+  const response = {
+    statusCode: errCode,
+    body: JSON.stringify(msg),
+  };
+  return response;
+}
 
 exports.getBatchWriteData = (records, offset, size) => {
   const requestParams = {
@@ -129,18 +146,14 @@ exports.handler = async (event) => {
         )}`;
         console.error(errMsg);
         await this.publishSnsMessage(errMsg);
+        return responseError(ErrorCode, errMsg);
       }
     }
   } catch (err) {
-    console.error(err);
-    await this.publishSnsMessage(
-      `s3 file ${srcBucket}/${srcKey} ${JSON.stringify(err)}`
-    );
+    const errMsg = `s3 file ${srcBucket}/${srcKey} ${JSON.stringify(err)}`;
+    await this.publishSnsMessage(errMsg);
+    return responseError(ErrorCode, errMsg);
   }
 
-  const response = {
-    statusCode: 200,
-    body: JSON.stringify({}),
-  };
-  return response;
+  return responseSuccess();
 };
