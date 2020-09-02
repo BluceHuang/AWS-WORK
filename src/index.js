@@ -14,11 +14,9 @@ const LATITUDE = "latitude";
 const LONGITUDE = "longitude";
 
 const batchWriteSize = 20;
-
-const tableName = "t_address";
-const snsTopicArn = "arn:aws:sns:ap-east-1:666125933515:csvDataReceiveError";
-
+const { tableName, snsTopicArn } = require("./config");
 const ErrorCode = 10000;
+
 /**
  * check csv data
  */
