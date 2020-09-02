@@ -133,7 +133,6 @@ exports.handler = async (event) => {
       const handleSize = i < loopTotal - 1 ? batchWriteSize : total - offset;
       const requestParams = this.getBatchWriteData(records, offset, handleSize);
       console.log("write to dynamodb ...");
-      docClient.batchWrite;
       const result = await docClient.batchWrite(requestParams).promise();
       console.log(stringify(result));
       if (
