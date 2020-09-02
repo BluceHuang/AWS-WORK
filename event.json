@@ -27,7 +27,7 @@
           "arn": "arn:aws:s3:::huangyong-csvdata"
         },
         "object": {
-          "key": "csv/error.csv",
+          "key": "csv/normal.csv",
           "size": 639,
           "eTag": "576b56295ee88a44161ddaf8e464cfdb",
           "sequencer": "005F4CF2F46A4EDB76"
