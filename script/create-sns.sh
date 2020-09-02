@@ -1,1 +1,1 @@
-aws sns create-topic --name csvDataReceiveError
+aws sns create-topic --name csvDataReceiveError >> sns-name.json

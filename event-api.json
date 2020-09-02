@@ -1,0 +1,29 @@
+{
+  "body": "latitude,longitude,address\r\n      -43.58299805,146.89373497,\"840 COCKLE CREEK RD, RECHERCHE TAS 7109\"\r\n      -43.58259635,146.89402117,\"833 COCKLE CREEK RD, RECHERCHE TAS 7109\"\r\n",
+  "requestContext": {
+    "accountId": "123456789012",
+    "resourceId": "123456",
+    "stage": "prod",
+    "requestId": "c6af9ac6-7b61-11e6-9a41-93e8deadbeef",
+    "requestTime": "09/Apr/2015:12:34:56 +0000",
+    "requestTimeEpoch": 1428582896000,
+    "identity": {
+      "cognitoIdentityPoolId": null,
+      "accountId": null,
+      "cognitoIdentityId": null,
+      "caller": null,
+      "accessKey": null,
+      "sourceIp": "127.0.0.1",
+      "cognitoAuthenticationType": null,
+      "cognitoAuthenticationProvider": null,
+      "userArn": null,
+      "userAgent": "Custom User Agent String",
+      "user": null
+    },
+    "path": "/acceptCsvData",
+    "resourcePath": "/acceptCsvData",
+    "httpMethod": "PUT",
+    "apiId": "1234567890",
+    "protocol": "HTTP/1.1"
+  }
+}

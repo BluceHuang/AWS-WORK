@@ -1,4 +1,7 @@
-const { checkCsvData } = require("../index");
+const { checkCsvData, getCsvData } = require("../src/index");
+const fs = require("fs");
+const path = require("path");
+
 const s3Data = {
   AcceptRanges: "bytes",
   LastModified: "2020-08-31T12:54:13.000Z",
@@ -695,5 +698,16 @@ describe("csv data test", () => {
       -43.58259635,146.89402117,"833 COCKLE CREEK RD, RECHERCHE TAS 7109"`;
     const records = checkCsvData(data);
     expect(records.length).toBe(2);
+  });
+
+  test("api request csvdata", async () => {
+    const data = fs.readFileSync(
+      path.resolve(__dirname, "../normal.csv"),
+      "utf-8"
+    );
+    const event = { body: data };
+    const csvData = await getCsvData(event);
+    const records = checkCsvData(csvData);
+    expect(records.length).toBe(9);
   });
 });

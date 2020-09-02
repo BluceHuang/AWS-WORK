@@ -1,22 +1,22 @@
-AWSTemplateFormatVersion: '2010-09-09'
-Transform: AWS::Serverless-2016-10-31
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: "AWS::Serverless-2016-10-31"
 Description: An AWS Serverless Specification template describing your function.
 Resources:
   acceptCsvData:
-    Type: AWS::Serverless::Function
+    Type: "AWS::Serverless::Function"
     Properties:
       Handler: index.handler
       Runtime: nodejs12.x
-      CodeUri: s3://lambda-artifacts-e1eff805b60eefd4/4320218917839a9cb065e9df5c8a46c6
+      CodeUri: src/.
       Description: Call the AWS Lambda API
       MemorySize: 128
       Timeout: 3
       Policies:
-      - AWSLambdaBasicExecutionRole
-      - AWSLambdaReadOnlyAccess
-      - AWSXrayWriteOnlyAccess
-      - AmazonDynamoDBFullAccess
-      - AmazonSNSFullAccess
+        - AWSLambdaBasicExecutionRole
+        - AWSLambdaReadOnlyAccess
+        - AWSXrayWriteOnlyAccess
+        - AmazonDynamoDBFullAccess
+        - AmazonSNSFullAccess
       Tracing: Active
       Events:
         ApiEvent:
@@ -25,12 +25,12 @@ Resources:
             Path: /acceptCsvData
             Method: PUT
       Layers:
-      - Ref: libs
+        - !Ref libs
   libs:
     Type: AWS::Serverless::LayerVersion
     Properties:
       LayerName: blank-nodejs-lib
       Description: Dependencies for the blank sample app.
-      ContentUri: s3://lambda-artifacts-e1eff805b60eefd4/707ac3c80bd11d7681785327e430a67b
+      ContentUri: lib/.
       CompatibleRuntimes:
-      - nodejs12.x
+        - nodejs12.x

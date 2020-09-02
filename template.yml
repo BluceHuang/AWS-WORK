@@ -1,16 +1,16 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: "AWS::Serverless-2016-10-31"
-Description: An AWS Lambda application that calls the Lambda API.
+Description: An AWS Serverless Specification template describing your function.
 Resources:
-  function:
+  acceptCsvData:
     Type: AWS::Serverless::Function
     Properties:
       Handler: index.handler
       Runtime: nodejs12.x
       CodeUri: src/.
       Description: Call the AWS Lambda API
-      Timeout: 10
-      # Function's execution role
+      MemorySize: 128
+      Timeout: 3
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSLambdaReadOnlyAccess
@@ -18,6 +18,19 @@ Resources:
         - AmazonDynamoDBFullAccess
         - AmazonSNSFullAccess
       Tracing: Active
+      Events:
+        BucketEvent:
+          Type: S3
+          Properties:
+            Bucket:
+              Ref: BucketSource
+            Events:
+              - "s3:ObjectCreated:Put"
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: csv/
       Layers:
         - !Ref libs
   libs:
@@ -28,3 +41,5 @@ Resources:
       ContentUri: lib/.
       CompatibleRuntimes:
         - nodejs12.x
+  BucketSource:
+    Type: "AWS::S3::Bucket"

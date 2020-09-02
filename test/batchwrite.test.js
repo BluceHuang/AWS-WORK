@@ -1,4 +1,4 @@
-const { getBatchWriteData } = require("../index");
+const { getBatchWriteData } = require("../src/index");
 const data = [
   {
     latitude: "-43.58299805",

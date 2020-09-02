@@ -97,7 +97,7 @@ exports.publishSnsMessage = async (msg) => {
   }
 };
 
-exports.handler = async (event) => {
+async function getCsvDataFromS3Event(event) {
   const srcBucket = event.Records[0].s3.bucket.name;
   const srcKey = decodeURIComponent(
     event.Records[0].s3.object.key.replace(/\+/g, "")
@@ -106,25 +106,46 @@ exports.handler = async (event) => {
   // Infer the csv type from the file suffix.
   const typeMatch = srcKey.match(/\.([^.]*)$/);
   if (!typeMatch) {
-    console.log("Could not determine the csv type.");
-    return;
+    throw "Could not determine the csv type.";
   }
 
   // Check that the csv type is supported
   const csvType = typeMatch[1].toLowerCase();
   if (csvType !== "csv") {
-    console.log(`Unsupported type`);
-    return;
+    throw `Unsupported file type`;
   }
 
+  const s3Data = await s3
+    .getObject({ Bucket: srcBucket, Key: srcKey })
+    .promise();
+  console.log(JSON.stringify(s3Data));
+  return s3Data.Body;
+}
+
+function getCsvDataFromApiEvent(event) {
+  if (typeof event.body === "string") {
+    return event.body;
+  } else if (event.body) {
+    return stringify(event.body);
+  }
+
+  throw "exception api request, no body data";
+}
+
+exports.getCsvData = async (event) => {
+  if (event.Records) {
+    return await getCsvDataFromS3Event(event);
+  } else {
+    return await getCsvDataFromApiEvent(event);
+  }
+};
+
+exports.handler = async (event) => {
   console.log(`receive this event ${JSON.stringify(event)}`);
 
   try {
-    const csvData = await s3
-      .getObject({ Bucket: srcBucket, Key: srcKey })
-      .promise();
-    console.log(JSON.stringify(csvData));
-    const records = this.checkCsvData(csvData.Body);
+    const csvData = await this.getCsvData(event);
+    const records = this.checkCsvData(csvData);
     const total = records.length;
     const loopTotal = Math.ceil(total / batchWriteSize);
 
@@ -140,7 +161,7 @@ exports.handler = async (event) => {
         result.UnprocessedItems[tableName] &&
         result.UnprocessedItems[tableName].length > 0
       ) {
-        const errMsg = `s3 file ${srcBucket}/${srcKey} ${tableName} unprocess data ${JSON.stringify(
+        const errMsg = `${tableName} unprocess data ${JSON.stringify(
           result.UnprocessedItems
         )}`;
         console.error(errMsg);
@@ -149,7 +170,7 @@ exports.handler = async (event) => {
       }
     }
   } catch (err) {
-    const errMsg = `s3 file ${srcBucket}/${srcKey} ${JSON.stringify(err)}`;
+    const errMsg = `${JSON.stringify(err)}`;
     await this.publishSnsMessage(errMsg);
     return responseError(ErrorCode, errMsg);
   }
