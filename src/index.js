@@ -1,3 +1,12 @@
+/*
+ * @Description: aws lambda function for accept csv data
+ * @Author: BluceHuang
+ * @Email: 2818704605@qq.com
+ * @Date: 2020-09-01 00:54:54
+ * @LastEditTime: 2020-09-03 11:33:59
+ * @LastEditors: BluceHuang
+ */
+
 const AWS = require("aws-sdk");
 const parse = require("csv-parse/lib/sync");
 const md5 = require("md5-node");
@@ -18,7 +27,10 @@ const { tableName, snsTopicArn } = require("./config");
 const ErrorCode = 10000;
 
 /**
- * check csv data
+ * @description: check csv data
+ * @Author: BluceHuang
+ * @param : data: Buffer or String
+ * @return csv data array or throw error
  */
 exports.checkCsvData = (data) => {
   const records = parse(data, {
@@ -64,6 +76,12 @@ function responseError(errCode, msg) {
   return response;
 }
 
+/**
+ * @description: provide batch write request data
+ * @Author: BluceHuang
+ * @param : records, offset, size
+ * @return DocumentClient.BatchWriteItemInput
+ */
 exports.getBatchWriteData = (records, offset, size) => {
   const requestParams = {
     RequestItems: {},
@@ -138,6 +156,12 @@ exports.getCsvData = async (event) => {
   }
 };
 
+/**
+ * @description: lambda function entry
+ * @Author: BluceHuang
+ * @param : event
+ * @return {statusCode, body}
+ */
 exports.handler = async (event) => {
   console.log(`receive this event ${JSON.stringify(event)}`);
 
