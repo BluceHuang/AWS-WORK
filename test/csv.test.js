@@ -700,7 +700,7 @@ describe("csv data test", () => {
     expect(records.length).toBe(2);
   });
 
-  test("api request csvdata", async () => {
+  test("api request csvdata 1", async () => {
     const data = fs.readFileSync(
       path.resolve(__dirname, "../normal.csv"),
       "utf-8"
@@ -709,5 +709,12 @@ describe("csv data test", () => {
     const csvData = await getCsvData(event);
     const records = checkCsvData(csvData);
     expect(records.length).toBe(9);
+  });
+
+  test("api request csvdata 2", async () => {
+    const event = require("../event-api.json");
+    const csvData = await getCsvData(event);
+    const records = checkCsvData(csvData);
+    expect(records.length).toBe(2);
   });
 });

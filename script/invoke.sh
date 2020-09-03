@@ -9,7 +9,7 @@ then
   cat out.json
   echo ""
 else
-  FUNCTION=$(aws cloudformation describe-stack-resource --stack-name blank-nodejs --logical-resource-id acceptCsvData --query 'StackResourceDetail.PhysicalResourceId' --output text)
+  FUNCTION=$(aws cloudformation describe-stack-resource --stack-name blank-nodejs-1 --logical-resource-id acceptCsvData --query 'StackResourceDetail.PhysicalResourceId' --output text)
   echo $FUNCTION
   aws lambda invoke --function-name $FUNCTION --payload fileb://event.json out.json
   cat out.json

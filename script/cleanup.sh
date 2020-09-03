@@ -1,11 +1,11 @@
 #!/bin/bash
 set -eo pipefail
-STACK=blank-nodejs
+STACK=blank-nodejs-1
 if [[ $# -eq 1 ]] ; then
     STACK=$1
     echo "Deleting stack $STACK"
 fi
-FUNCTION=$(aws cloudformation describe-stack-resource --stack-name $STACK --logical-resource-id function --query 'StackResourceDetail.PhysicalResourceId' --output text)
+FUNCTION=$(aws cloudformation describe-stack-resource --stack-name $STACK --logical-resource-id acceptCsvData --query 'StackResourceDetail.PhysicalResourceId' --output text)
 aws cloudformation delete-stack --stack-name $STACK
 echo "Deleted $STACK stack."
 

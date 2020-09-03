@@ -1,9 +1,68 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: "AWS::Serverless-2016-10-31"
 Description: An AWS Serverless Specification template describing your function.
+Parameters:
+  BucketName:
+    Type: String
+    Default: csvdata-cnf
 Resources:
+  Bucket:
+    Type: AWS::S3::Bucket
+    DependsOn:
+      - ProcessingLambdaPermission
+    Properties:
+      BucketName: !Ref BucketName
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: s3:ObjectCreated:Put
+            Function: !GetAtt acceptCsvData.Arn
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: suffix
+                    Value: .csv
+
+  ProcessingLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !Ref acceptCsvData
+      Principal: s3.amazonaws.com
+      SourceArn: !Sub "arn:aws:s3:::${BucketName}"
+      SourceAccount: !Ref AWS::AccountId
+
+  ProcessingLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: allowLogging
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:*
+                Resource: arn:aws:logs:*:*:*
+        - PolicyName: getAndDeleteObjects
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:CreateObject
+                Resource: !Sub "arn:aws:s3:::${BucketName}/*"
+
   acceptCsvData:
-    Type: AWS::Serverless::Function
+    Type: "AWS::Serverless::Function"
     Properties:
       Handler: index.handler
       Runtime: nodejs12.x
@@ -18,19 +77,6 @@ Resources:
         - AmazonDynamoDBFullAccess
         - AmazonSNSFullAccess
       Tracing: Active
-      Events:
-        BucketEvent:
-          Type: S3
-          Properties:
-            Bucket:
-              Ref: BucketSource
-            Events:
-              - "s3:ObjectCreated:Put"
-            Filter:
-              S3Key:
-                Rules:
-                  - Name: prefix
-                    Value: csv/
       Layers:
         - !Ref libs
   libs:
@@ -41,5 +87,3 @@ Resources:
       ContentUri: lib/.
       CompatibleRuntimes:
         - nodejs12.x
-  BucketSource:
-    Type: "AWS::S3::Bucket"
