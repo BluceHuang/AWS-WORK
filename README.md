@@ -1,5 +1,5 @@
 # aws-work
-## using cloudformaion deploy and test lambda function
+## using cloudformation deploy and test lambda function
 * 1.create dynamodb table
   > ```./script/create-table.sh```
 * 2.create sns error notify   
