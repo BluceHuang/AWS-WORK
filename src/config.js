@@ -3,4 +3,6 @@ module.exports = {
   tableName: "t_address",
   // sns topic arn for error notify
   snsTopicArn: "arn:aws:sns:ap-east-1:666125933515:csvDataReceiveError",
+  // the size of batch write dynamic db
+  batchWriteSize: 20,
 };

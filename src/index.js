@@ -1,12 +1,11 @@
 /*
- * @Description: aws lambda function for accept csv data
+ * @Description: aws lambda function for accept csv data and write to dynamodb
  * @Author: BluceHuang
  * @Email: 2818704605@qq.com
  * @Date: 2020-09-01 00:54:54
- * @LastEditTime: 2020-09-03 11:33:59
+ * @LastEditTime: 2020-09-25 21:49:52
  * @LastEditors: BluceHuang
  */
-
 const AWS = require("aws-sdk");
 const parse = require("csv-parse/lib/sync");
 const md5 = require("md5-node");
@@ -22,9 +21,8 @@ columns.sort();
 const LATITUDE = "latitude";
 const LONGITUDE = "longitude";
 
-const batchWriteSize = 20;
-const { tableName, snsTopicArn } = require("./config");
-const ErrorCode = 10000;
+const { tableName, snsTopicArn, batchWriteSize } = require("./config");
+const { WriteDbError, InvalidDataError } = require("./error");
 
 /**
  * @description: check csv data
@@ -39,7 +37,7 @@ exports.checkCsvData = (data) => {
     delimiter: ",",
   });
 
-  console.log(JSON.stringify(records));
+  // console.log(JSON.stringify(records));
 
   // check data is empty or not
   if (!Array.isArray(records) || records.length === 0) {
@@ -62,16 +60,8 @@ exports.checkCsvData = (data) => {
 
 function responseSuccess() {
   const response = {
-    statusCode: 200,
+    statusCode: 0,
     body: JSON.stringify({}),
-  };
-  return response;
-}
-
-function responseError(errCode, msg) {
-  const response = {
-    statusCode: errCode,
-    body: JSON.stringify(msg),
   };
   return response;
 }
@@ -98,7 +88,7 @@ exports.getBatchWriteData = (records, offset, size) => {
   return requestParams;
 };
 
-exports.publishSnsMessage = async (msg) => {
+async function publishSnsMessage(msg) {
   const params = {
     Message: msg,
     TopicArn: snsTopicArn,
@@ -111,7 +101,7 @@ exports.publishSnsMessage = async (msg) => {
   } catch (err) {
     console.error(`publish sns message fail, ${JSON.stringify(err)}`);
   }
-};
+}
 
 async function getCsvDataFromS3Event(event) {
   const srcBucket = event.Records[0].s3.bucket.name;
@@ -156,6 +146,19 @@ exports.getCsvData = async (event) => {
   }
 };
 
+function responseError(errCode, msg) {
+  const response = {
+    statusCode: errCode,
+    body: JSON.stringify(msg),
+  };
+  return response;
+}
+
+async function handleError(errCode, errMsg) {
+  await publishSnsMessage(errMsg);
+  return responseError(errCode, errMsg);
+}
+
 /**
  * @description: lambda function entry
  * @Author: BluceHuang
@@ -167,7 +170,13 @@ exports.handler = async (event) => {
 
   try {
     const csvData = await this.getCsvData(event);
-    const records = this.checkCsvData(csvData);
+    let records = null;
+    try {
+      records = this.checkCsvData(csvData);
+    } catch (err) {
+      return await handleError(InvalidDataError, err);
+    }
+
     const total = records.length;
     const loopTotal = Math.ceil(total / batchWriteSize);
 
@@ -177,7 +186,6 @@ exports.handler = async (event) => {
       const requestParams = this.getBatchWriteData(records, offset, handleSize);
       console.log("write to dynamodb ...");
       const result = await docClient.batchWrite(requestParams).promise();
-      console.log(stringify(result));
       if (
         result.UnprocessedItems &&
         result.UnprocessedItems[tableName] &&
@@ -187,14 +195,12 @@ exports.handler = async (event) => {
           result.UnprocessedItems
         )}`;
         console.error(errMsg);
-        await this.publishSnsMessage(errMsg);
-        return responseError(ErrorCode, errMsg);
+        return await handleError(WriteDbError, errMsg);
       }
     }
   } catch (err) {
     const errMsg = `${JSON.stringify(err)}`;
-    await this.publishSnsMessage(errMsg);
-    return responseError(ErrorCode, errMsg);
+    return await handleError(WriteDbError, errMsg);
   }
 
   return responseSuccess();
