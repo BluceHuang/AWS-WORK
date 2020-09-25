@@ -4,6 +4,7 @@ const apiEvent = require("../event-api.json");
 
 describe("csv data test", () => {
   test("accpet s3 event", async () => {
+    jest.setTimeout(10000);
     const result = await handler(event);
     console.log(JSON.stringify(result));
     expect(result.statusCode).toBe(0);
