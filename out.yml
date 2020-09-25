@@ -1,13 +1,77 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: An AWS Serverless Specification template describing your function.
+Parameters:
+  BucketName:
+    Type: String
+    Default: csvdata-cnf
 Resources:
+  Bucket:
+    Type: AWS::S3::Bucket
+    DependsOn:
+    - ProcessingLambdaPermission
+    Properties:
+      BucketName:
+        Ref: BucketName
+      NotificationConfiguration:
+        LambdaConfigurations:
+        - Event: s3:ObjectCreated:Put
+          Function:
+            Fn::GetAtt:
+            - acceptCsvData
+            - Arn
+          Filter:
+            S3Key:
+              Rules:
+              - Name: suffix
+                Value: .csv
+  ProcessingLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Ref: acceptCsvData
+      Principal: s3.amazonaws.com
+      SourceArn:
+        Fn::Sub: arn:aws:s3:::${BucketName}
+      SourceAccount:
+        Ref: AWS::AccountId
+  ProcessingLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Policies:
+      - PolicyName: allowLogging
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:*
+            Resource: arn:aws:logs:*:*:*
+      - PolicyName: getAndDeleteObjects
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - s3:CreateObject
+            Resource:
+              Fn::Sub: arn:aws:s3:::${BucketName}/*
   acceptCsvData:
     Type: AWS::Serverless::Function
     Properties:
       Handler: index.handler
       Runtime: nodejs12.x
-      CodeUri: s3://lambda-artifacts-e1eff805b60eefd4/4320218917839a9cb065e9df5c8a46c6
+      CodeUri: s3://lambda-artifacts-507ea32ddad17934/c02651822a25bd5bfb8d4b7aa2982977
       Description: Call the AWS Lambda API
       MemorySize: 128
       Timeout: 3
@@ -18,12 +82,6 @@ Resources:
       - AmazonDynamoDBFullAccess
       - AmazonSNSFullAccess
       Tracing: Active
-      Events:
-        ApiEvent:
-          Type: Api
-          Properties:
-            Path: /acceptCsvData
-            Method: PUT
       Layers:
       - Ref: libs
   libs:
@@ -31,6 +89,6 @@ Resources:
     Properties:
       LayerName: blank-nodejs-lib
       Description: Dependencies for the blank sample app.
-      ContentUri: s3://lambda-artifacts-e1eff805b60eefd4/707ac3c80bd11d7681785327e430a67b
+      ContentUri: s3://lambda-artifacts-507ea32ddad17934/6dc7901b81320746f348325d356411de
       CompatibleRuntimes:
       - nodejs12.x
